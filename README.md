@@ -6,10 +6,10 @@ Aplicación web instalable para llevar comisiones de vendedores y los abonos que
 
 - Vendedores y productos, con una comisión fija por unidad para cada producto.
 - Registros por vendedor y producto, cantidad, fecha y nota opcional.
-- Pagos completos o abonos; el saldo se calcula automáticamente y un pago no puede superar lo pendiente.
+- Pagos completos o abonos, con historial cronológico editable; el saldo se recalcula automáticamente y un pago no puede superar lo pendiente.
 - Resumen total y por vendedor, búsqueda y filtros.
 - Exportación de respaldo JSON y descarga de comisiones CSV.
-- Moneda configurable para mostrar montos.
+- Montos en pesos mexicanos (MXN) y fechas visibles en formato dd/mm/aaaa.
 - Instalación en Android y carga sin conexión después de abrirla una vez en línea.
 
 ## Probar en Acode
@@ -32,4 +32,4 @@ Los datos se guardan localmente en el navegador y el dispositivo donde se introd
 
 ## Reglas de cálculo
 
-La comisión total de un registro es `cantidad × comisión por unidad` del producto. Los abonos quedan guardados con fecha y nota. El saldo pendiente es `comisión total − suma de abonos`. Editar un producto cambia la tarifa para registros nuevos; cada registro conserva su tarifa y total originales. Si editas la cantidad de un registro ya pagado, el nuevo total no puede quedar por debajo del dinero que ya se pagó.
+La comisión total de un registro es `cantidad × comisión por unidad` del producto. Los abonos quedan guardados con fecha y nota, se pueden editar o eliminar desde el historial y no pueden exceder el saldo disponible. Se rechazan pagos con fecha futura y montos con más de dos decimales. El saldo pendiente es `comisión total − suma de abonos`. Editar un producto cambia la tarifa para registros nuevos; cada registro conserva su tarifa y total originales. Si editas la cantidad de un registro ya pagado, el nuevo total no puede quedar por debajo del dinero que ya se pagó. Los montos se presentan en MXN; importar un respaldo con importes de otra moneda no los convierte.
