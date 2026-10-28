@@ -1,35 +1,47 @@
 # Comisión Clara
 
-Aplicación web instalable para llevar comisiones de vendedores y los abonos que reciben. Está hecha con HTML, CSS y JavaScript sin dependencias de instalación; puedes editarla con Acode y publicarla gratis con GitHub Pages.
+Aplicación web instalable para gestionar comisiones y pagos compartidos entre dispositivos. Está hecha con HTML, CSS y JavaScript; los datos sincronizados se guardan en Supabase y el sitio estático se publica en GitHub Pages.
 
-## Qué puedes llevar
+## Funciones
 
-- Vendedores y productos, con una comisión fija por unidad para cada producto.
-- Registros por vendedor y producto, cantidad, fecha y nota opcional.
-- Pagos completos o abonos, con historial cronológico editable; el saldo se recalcula automáticamente y un pago no puede superar lo pendiente.
-- Resumen total y por vendedor, búsqueda y filtros.
-- Exportación de respaldo JSON y descarga de comisiones CSV.
-- Montos en pesos mexicanos (MXN) y fechas visibles en formato dd/mm/aaaa.
-- Instalación en Android y carga sin conexión después de abrirla una vez en línea.
+- Vendedores y productos con comisión fija por unidad.
+- Comisiones con monto, producto, vendedor, cantidad, fecha y nota.
+- Pagos parciales con historial editable, descarga de recibos PDF y saldo actualizado.
+- Acceso con correo y contraseña. Solo las cuentas autorizadas en Supabase pueden usar la base.
+- Sincronización de cambios entre dispositivos conectados a internet.
+- Exportación e importación de respaldos JSON y CSV.
+- Montos en MXN y fechas dd/mm/aaaa.
 
-## Probar en Acode
+## Configurar Supabase (una sola vez)
 
-1. En Android, descarga la carpeta o los archivos del repositorio de GitHub y ábrelos en Acode.
-2. Abre `index.html` con la vista previa de Acode. Para instalar la app y habilitar el modo sin conexión, publícala por HTTPS en GitHub Pages.
-3. Desde Acode puedes modificar `index.html`, `styles.css` y `app.js`; guarda y actualiza la vista previa.
+1. En el proyecto de Supabase, abre **SQL Editor → New query**.
+2. Copia y ejecuta el contenido de `supabase/setup.sql`. Esto crea las tablas, las políticas RLS y la validación de pagos.
+3. Abre **Authentication → Users** y crea una cuenta por persona que necesite acceso. Si solo una persona usará la app en tres dispositivos, basta una cuenta, iniciando sesión en los tres.
+4. En la tabla de usuarios, copia el UUID de cada cuenta recién creada. En SQL Editor ejecuta una consulta como la siguiente, sustituyendo los UUID y nombres:
+
+   ```sql
+   insert into public.commission_members (user_id, display_name, role)
+   values
+     ('UUID-DE-LA-CUENTA-1', 'Nombre 1', 'admin'),
+     ('UUID-DE-LA-CUENTA-2', 'Nombre 2', 'operator'),
+     ('UUID-DE-LA-CUENTA-3', 'Nombre 3', 'operator');
+   ```
+
+   Omite las filas de cuentas que no creaste. Esta autorización se hace desde SQL Editor; el formulario público de la aplicación no permite crear cuentas ni acceder a datos.
+5. En `supabase-config.js` están la URL del proyecto y la clave **publishable**. Esa clave está diseñada para aparecer en apps de navegador; las políticas RLS limitan los datos a miembros. Nunca pongas una clave `sb_secret_` ni `service_role` en los archivos web.
+6. Abre la aplicación publicada en cada dispositivo e inicia sesión con una cuenta autorizada.
+
+Si la base está vacía y el dispositivo tiene datos guardados en la versión local anterior, al iniciar sesión la aplicación preguntará si quieres importarlos a la base compartida.
 
 ## Publicar con GitHub Pages
 
-1. Crea un repositorio nuevo en GitHub.
-2. Sube todos los archivos de esta carpeta al nivel principal del repositorio.
-3. En GitHub, abre **Settings → Pages**.
-4. En **Build and deployment**, selecciona **Deploy from a branch**, elige la rama `main` y la carpeta `/(root)`, y guarda.
-5. Espera a que GitHub muestre el enlace del sitio. Ábrelo en Chrome Android y usa **Instalar app** o el menú **Agregar a pantalla principal**.
+1. Sube todos los archivos y la carpeta `supabase/` al nivel principal del repositorio.
+2. En GitHub, abre **Settings → Pages**.
+3. En **Build and deployment**, selecciona **Deploy from a branch**, la rama `main` y la carpeta `/(root)`.
+4. Guarda los cambios y espera a que termine la publicación. Abre el enlace HTTPS de Pages en cada dispositivo.
 
-## Respaldos y privacidad
+## Datos y operación
 
-Los datos se guardan localmente en el navegador y el dispositivo donde se introducen. GitHub Pages publica los archivos de la aplicación, pero no sincroniza registros entre dispositivos. En **Ajustes y respaldo**, descarga copias JSON con regularidad; en otro dispositivo, abre la misma sección y restaura el archivo. Puedes descargar la tabla como CSV para Excel o Google Sheets.
+La base compartida requiere internet para consultar y sincronizar cambios. Descarga respaldos desde **Ajustes y respaldo** con regularidad. GitHub Pages guarda el código público, no los registros financieros. El recibo PDF de cada pago incluye nombre del vendedor, fecha, monto y concepto del producto.
 
-## Reglas de cálculo
-
-La comisión total de un registro es `cantidad × comisión por unidad` del producto. Los abonos quedan guardados con fecha y nota, se pueden editar o eliminar desde el historial y no pueden exceder el saldo disponible. Se rechazan pagos con fecha futura y montos con más de dos decimales. El saldo pendiente es `comisión total − suma de abonos`. Editar un producto cambia la tarifa para registros nuevos; cada registro conserva su tarifa y total originales. Si editas la cantidad de un registro ya pagado, el nuevo total no puede quedar por debajo del dinero que ya se pagó. Los montos se presentan en MXN; importar un respaldo con importes de otra moneda no los convierte.
+La comisión total es `cantidad × comisión por unidad`. El saldo restante es `comisión total − suma de pagos`. La base rechaza fechas de pago futuras y pagos que superen el saldo; la aplicación limita los montos a dos decimales.
